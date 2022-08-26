@@ -1,2 +1,2 @@
-model_checkpoint_path: "beginner2_checkpoint"
-all_model_checkpoint_paths: "beginner2_checkpoint"
+model_checkpoint_path: "cnn_checkpoint"
+all_model_checkpoint_paths: "cnn_checkpoint"
