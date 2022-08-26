@@ -6,6 +6,7 @@
   * numpy 1.23.1
   * matplotlib 3.5.1
   * ipympl 0.8.7
+  * opencv 4.5.5
   * tensorflow 2.8.2
 * 但是如此的安裝，執行 beginner.ipynb 時，matplotlib 與 tensorflow 似乎有衝突，python  kernel 會當掉，參考 [tensorflow 網站](https://www.tensorflow.org/install)，改用 pip 安裝 tensorflow 2.9.1，在 tensorflow 環境(env)下作如下修改
   * 用 anaconda navigator 移除 tensorflow 2.8.2
