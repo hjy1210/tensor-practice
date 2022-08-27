@@ -10,6 +10,8 @@
 	<title>E-Signature</title>
 	<!-- Styles -->
 	<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  	<!-- Import TensorFlow.js -->
+  	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.19.0/dist/tf.min.js"></script>
 	<style>
 		body {
 			padding-top: 20px;
@@ -52,7 +54,10 @@
 				<button class="btn btn-default" id="sig-clearBtn">
 				  Clear Signature
 			  </button>
-			</div>
+			  <button class="btn btn-default" onclick="alert(recognize())">
+				辨識
+			</button>
+		  </div>
 		</div>
 		<br/>
 		<div class="row">
@@ -74,8 +79,41 @@
 	<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 	<!--<script src="https://code.angularjs.org/snapshot/angular.min.js"></script>-->
 	<script>
-		(function() {
+		var canvas;
+		var model; 
+		function rgbTensor2GrayTensor(rgbtensor, dispose=true){
+			const [r, g, b] = tf.split(rgbtensor, 3, 2); //split to list of 3 at axis 2
+			const rt = tf.unstack(r,2)[0];
+			//const gt = tf.unstack(g,2)[0];
+			//const bt = tf.unstack(b,2)[0];
+			r.dispose();
+			g.dispose();
+			b.dispose();
+			if (dispose){
+				rgbtensor.dispose();
+			}
+			rt2 = rt.reshape( [1, rt.shape[0], rt.shape[1], 1])
+			rt3 = tf.image.resizeBilinear(rt2,[28,28])
+			rt.dispose();
+			rt2.dispose();
+			return rt3;  // rank 4, shape=[1, r,c,1]
+		}
+		function getGrayTensorFromCanvas(canvas){
+			rgb = tf.browser.fromPixels(canvas,3);
+			return rgbTensor2GrayTensor(rgb, dispose=true)
+		}
+		function recognize(){
+			gray = getGrayTensorFromCanvas(canvas);
+			pred = model.predict(gray);
+			v = pred.argMax(1).dataSync()[0];
+			gray.dispose();
+			pred.dispose();
+			return v;
+		}
+
+		(async function() {
 			
+			model = await tf.loadLayersModel('saved_model/converted_tfjs_model/model.json');
 			// Get a regular interval for drawing to the screen
 			window.requestAnimFrame = (function (callback) {
 				return window.requestAnimationFrame || 
@@ -89,7 +127,7 @@
 			})();
 
 			// Set up the canvas
-			var canvas = document.getElementById("sig-canvas");
+			canvas = document.getElementById("sig-canvas");
 			var ctx = canvas.getContext("2d");
 			ctx.strokeStyle = "#222222";
 			ctx.lineWith = 2;

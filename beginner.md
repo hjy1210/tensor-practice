@@ -12,7 +12,27 @@
   * 用 anaconda navigator 移除 tensorflow 2.8.2
   * pip install --upgrade pip
   * pip install tensorflow
+## 安裝 tensorflowjs
+[Github tfjs](https://github.com/tensorflow/tfjs/tree/master/tfjs-converter#regular-conversion-script-tensorflowjsconverter) 提到
+```
+The script pulls its own subset of TensorFlow, which might conflict with the existing TensorFlow/Keras installation.
 
+Note: Check that tf-nightly-2.0-preview is available for your platform.
+
+Most of the times, this means that you have to use Python 3.6.8 in your local environment.
+```
+因此，在python3.6.8環境下，順利安裝tensorflowjs，方法為 `pip install tensorflowjs`，它包含了tensorflow。接著用Anaconda Navigator 安裝了 numpy, matplotlib, ipympl, opencv。
+
+
+## 將 python 訓練好的模型移植到瀏覽器使用
+參考[How to Convert a Keras SavedModel into a Browser-based Web App](https://www.freecodecamp.org/news/convert-keras-savedmodel-into-browser-based-webapp/)，與[Importing a Keras model into TensorFlow.js](https://www.tensorflow.org/js/tutorials/conversion/import_keras)
+* 假設new_prob_model 是python訓練好的模型，下面指令將new_prob_model 轉換成tensorflow.js可處理的格式存到Saved_Model/converted_tfjs_model目錄裡
+  * import tensorflowjs as tfjs
+  * tfjs.converters.save_keras_model(new_prob_model, "Saved_Model/converted_tfjs_model")
+* 在網頁中，用下面指令進行辨識
+  * model = await tf.loadLayersModel('saved_model/converted_tfjs_model/model.json');
+  * model.predict()
+  * 詳情見draw.html
 ## 練習 beginner.py
 ```
 import tensorflow as tf
