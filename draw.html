@@ -41,9 +41,10 @@
 		</div>
 		<div class="row">
 			<div class="col-md-12">
-		 		<canvas id="sig-canvas" width="56" height="56">
+		 		<canvas id="sig-canvas" width="280" height="280">
 		 			Get a better browser, bro.
 		 		</canvas>
+				<label id="label" style="font-size:2em;" ></label>
 		 	</div>
 		</div>
 		<div class="row">
@@ -54,7 +55,7 @@
 				<button class="btn btn-default" id="sig-clearBtn">
 				  Clear Signature
 			  </button>
-			  <button class="btn btn-default" onclick="alert(recognize())">
+			  <button class="btn btn-default" onclick="document.getElementById('label').textContent=recognize()">
 				辨識
 			</button>
 		  </div>
@@ -114,6 +115,7 @@
 		(async function() {
 			
 			model = await tf.loadLayersModel('saved_model/converted_tfjs_model/model.json');
+			//model = await tf.loadLayersModel('saved_model/digit_cnn_model/model.json');
 			// Get a regular interval for drawing to the screen
 			window.requestAnimFrame = (function (callback) {
 				return window.requestAnimationFrame || 
@@ -139,6 +141,7 @@
 			var submitBtn = document.getElementById("sig-submitBtn");
 			clearBtn.addEventListener("click", function (e) {
 				clearCanvas();
+				document.getElementById('label').textContent='';
 				sigText.innerHTML = "Data URL for your signature will go here!";
 				sigImage.setAttribute("src", "");
 			}, false);
@@ -165,6 +168,7 @@
 
 			// Set up touch events for mobile, etc
 			canvas.addEventListener("touchstart", function (e) {
+				e.preventDefault();
 				mousePos = getTouchPos(canvas, e);
 				var touch = e.touches[0];
 				var mouseEvent = new MouseEvent("mousedown", {
@@ -174,10 +178,12 @@
 				canvas.dispatchEvent(mouseEvent);
 			}, false);
 			canvas.addEventListener("touchend", function (e) {
+				e.preventDefault();
 				var mouseEvent = new MouseEvent("mouseup", {});
 				canvas.dispatchEvent(mouseEvent);
 			}, false);
 			canvas.addEventListener("touchmove", function (e) {
+				e.preventDefault();
 				var touch = e.touches[0];
 				var mouseEvent = new MouseEvent("mousemove", {
 					clientX: touch.clientX,
@@ -224,10 +230,12 @@
 			// Draw to the canvas
 			function renderCanvas() {
 				if (drawing) {
+					//ctx.beginPath();
 					ctx.moveTo(lastPos.x, lastPos.y);
 					ctx.lineTo(mousePos.x, mousePos.y);
-                    ctx.lineWidth=5;
-                    ctx.strokeStyle='#ffffff';
+                    ctx.lineWidth=25;
+					ctx.lineCap = 'round'
+                    ctx.strokeStyle='white';
 					ctx.stroke();
 					lastPos = mousePos;
 				}

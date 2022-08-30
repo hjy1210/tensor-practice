@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="div">
+        <canvas width="2000" height="1000" id="canvas" style="border:thick solid blue;" ></canvas>
+    </div>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const div = document.getElementById("div");
+        drawline(ctx, 'gren', 0,0,canvas.width, canvas.height);
+        drawline(ctx, 'gren', canvas.width/2,0,canvas.width/2, canvas.height);
+        drawline(ctx, 'gren', 0,canvas.height/2,canvas.width, canvas.height/2);
+        drawline(ctx, 'red', 0,0,canvas.width, 0);
+        drawline(ctx, 'red', canvas.width,0 ,canvas.width, canvas.height);
+        drawline(ctx, 'red', 0,canvas.height,canvas.width, canvas.height);
+        drawline(ctx, 'red', 0,canvas.height, 0,0);
+        canvas.addEventListener("click",mousePosition);
+        function mousePosition(event){
+            console.log(`event.page=(${event.pageX},${event.pageY})`);
+            console.log(`event.client=(${event.clientX},${event.clientY})`);
+            console.log(`event.screen=(${event.screenX},${event.screenY})`);
+            console.log(`event.offset=(${event.offsetX},${event.offsetY})`);
+            var rect = event.target.getBoundingClientRect(); 
+            var style = window.getComputedStyle(canvas,null);
+            var x= event.clientX-rect.left-parseFloat(style.getPropertyValue("border-left-width"));
+            var y = event.clientY-rect.top-parseFloat(style.getPropertyValue("border-top-width"));
+            console.log(`pos=(${x},${y}),(${style.getPropertyValue("border-left-width")},${style.getPropertyValue("border-top-width")})`);
+        }
+        function drawline(ctx,color,x1,y1,x2,y2){
+            ctx.beginPath();
+            ctx.strokeStyle=color;
+ctx.        moveTo(x1, y1);
+ctx.        lineTo(x2, y2);
+ctx.        stroke();
+        }
+    </script>
+</body>
+</html>
