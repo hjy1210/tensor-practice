@@ -27,6 +27,10 @@
 
 
 ## DigitRecognizer.html
+因為MNIST資料的製作過程中，先將手寫字用正方形框住，把框住的部分伸縮成20x20的成方形圖形，再放倒28x28像素的正中央。
+
+在 DigitRecognizer.html 裡面安排三個畫布canvas, canvas2, canvas3。在canvas上寫阿拉伯數字，程式將寫的字算出圍住它的矩形。canvas2的畫布為正方形，邊長為前述矩形的長邊，將前述矩形所框住的圖形(用context.getImageData取出)擺在canvas2的正中央(用context.putImageData擺放)。canvas3的畫布也是正方形，邊長是canvas2的1.4倍，將canvas2的圖形擺在canvas3的正中央。
+
 
 ## 瀏覽器上的畫布
 首先，需要了解如何存取畫布上的像素。

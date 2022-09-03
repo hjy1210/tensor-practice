@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- Import TensorFlow.js -->
-  	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.19.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.19.0/dist/tf.min.js"></script>
 
     <title>Digit Recognizer</title>
     <style>
@@ -28,13 +28,21 @@
         <button id="recognizeBtn" disabled="true" onclick="document.getElementById('label').textContent=recognize()">
             辨識
         </button>
-
     </div>
+    <div>
+        <canvas id="canvas2"></canvas>
+    </div>
+    <div>
+        <canvas id="canvas3"></canvas>
+    </div>
+
     <script>
         const canvas = document.getElementById("canvas");
         const clearBtn = document.getElementById("clearBtn");
         const recognizeBtn = document.getElementById("recognizeBtn");
         const ctx = canvas.getContext("2d");
+        const ctx2 = canvas2.getContext("2d");
+        const ctx3 = canvas3.getContext("2d");
 
         // Set up mouse events for drawing
         var drawing = false;
@@ -104,7 +112,7 @@
                 ctx.beginPath();
                 ctx.moveTo(lastPos.x, lastPos.y);
                 ctx.lineTo(mousePos.x, mousePos.y);
-                ctx.lineWidth = 25;
+                ctx.lineWidth = 10;
                 ctx.lineCap = 'round'
                 ctx.strokeStyle = 'white';
                 ctx.stroke();
@@ -115,42 +123,97 @@
         // Clear the canvas
         function clearCanvas() {
             canvas.width = canvas.width;
-            document.getElementById('label').textContent="";
+            canvas2.width = canvas2.width;
+            canvas3.width = canvas3.width;
+            document.getElementById('label').textContent = "";
         }
 
         var model;
         //tf.loadLayersModel('saved_model/converted_tfjs_model/model.json').then(m=>{model=m; recognizeBtn.disabled=false;});
-		tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m=>{model=m; recognizeBtn.disabled=false;});
+        tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m => { model = m; recognizeBtn.disabled = false; });
 
-		function rgbTensor2GrayTensor(rgbtensor, dispose=true){
-			const [r, g, b] = tf.split(rgbtensor, 3, 2); //split to list of 3 at axis 2
-			const rt = tf.unstack(r,2)[0];
-			r.dispose();
-			g.dispose();
-			b.dispose();
-			if (dispose){
-				rgbtensor.dispose();
-			}
-			rt2 = rt.reshape( [1, rt.shape[0], rt.shape[1], 1])
-			rt3 = tf.image.resizeBilinear(rt2,[28,28])
-			rt.dispose();
-			rt2.dispose();
-			return rt3;  // rank 4, shape=[1, r,c,1]
-		}
+        function rgbTensor2GrayTensor(rgbtensor, dispose = true) {
+            const [r, g, b] = tf.split(rgbtensor, 3, 2); //split to list of 3 at axis 2
+            const rt = tf.unstack(r, 2)[0];
+            r.dispose();
+            g.dispose();
+            b.dispose();
+            if (dispose) {
+                rgbtensor.dispose();
+            }
+            rt2 = rt.reshape([1, rt.shape[0], rt.shape[1], 1])
+            rt3 = tf.image.resizeBilinear(rt2, [28, 28])
+            rt.dispose();
+            rt2.dispose();
+            return rt3;  // rank 4, shape=[1, r,c,1]
+        }
 
-		function getGrayTensorFromCanvas(canvas){
-			rgb = tf.browser.fromPixels(canvas,3);
-			return rgbTensor2GrayTensor(rgb, dispose=true)
-		}
+        function getGrayTensorFromCanvas(canvas) {
+            rgb = tf.browser.fromPixels(canvas, 3);
+            return rgbTensor2GrayTensor(rgb, dispose = true)
+        }
 
-        function recognize(){
-			var gray = getGrayTensorFromCanvas(canvas);
-			var pred = model.predict(gray);
-			v = pred.argMax(1).dataSync()[0];
-			gray.dispose();
-			pred.dispose();
-			return v;
-		}
+        function recognize() {
+            const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const rect = computeBoundingRect(image);
+            if (rect.xmax < 0) {
+                return -1;
+            }
+
+            var data = ctx.getImageData(rect.xmin, rect.ymin, rect.xmax - rect.xmin + 1, rect.ymax - rect.ymin + 1);
+            var longer = data.height > data.width;
+            var w = longer ? data.height : data.width;
+            canvas2.width = w;
+            canvas2.height = w;
+            var left = longer ? w / 2 - data.width / 2 : 0;
+            var top = longer ? 0 : w / 2 - data.height / 2;
+            //console.log(canvas2.width, canvas2.height)
+            ctx2.createImageData(w, w);
+            ctx2.putImageData(data, left, top);
+
+            var scale = 28 / 20;
+            var W = Math.floor(w * scale);
+            canvas3.width = W;
+            canvas3.height = W;
+            ctx3.createImageData(W, W);
+            ctx3.putImageData(ctx2.getImageData(0, 0, w, w), W / 2 - w / 2, W / 2 - w / 2);
+
+            var gray = getGrayTensorFromCanvas(canvas3);
+            var pred = model.predict(gray);
+            v = pred.argMax(1).dataSync()[0];
+            gray.dispose();
+            pred.dispose();
+            return v;
+        }
+        /*function getBoundingRect(){
+            const image = ctx.getImageData(0,0,canvas.width,canvas.height);
+            const rect = computeBoundingRect(image);
+            console.log(rect)
+            data = ctx.getImageData(rect.xmin, rect.ymin, rect.xmax-rect.xmin+1, rect.ymax-rect.ymin+1);
+            canvas2.width=data.width;
+            canvas2.height=data.height;
+            console.log(canvas2.width, canvas2.height)
+            ctx2.createImageData(data.width, data.height);
+            ctx2.putImageData(data,0,0);
+        }*/
+        function computeBoundingRect(image) {
+            var xmin = image.width, xmax = -1, ymin = image.height, ymax = -1;
+            for (let i = 0; i < image.width * image.height; i += 1) {
+                const j = i * 4;
+
+                if (image.data[j + 0] > 0 || image.data[j + 1] > 0 || image.data[j + 2] > 0) {
+                    const x = i % image.width;
+                    const y = Math.floor(i / image.width);
+
+                    xmin = Math.min(x, xmin);
+                    xmax = Math.max(x, xmax);
+                    ymin = Math.min(y, ymin);
+                    ymax = Math.max(y, ymax);
+                }
+            }
+
+            return { xmin: xmin, ymin: ymin, xmax: xmax, ymax: ymax };
+        }
 
     </script>
 </body>
