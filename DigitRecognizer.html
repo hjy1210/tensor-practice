@@ -30,10 +30,7 @@
         </button>
     </div>
     <div>
-        <canvas id="canvas2"></canvas>
-    </div>
-    <div>
-        <canvas id="canvas3"></canvas>
+        bounded<canvas id="canvas2"></canvas> extent<canvas id="canvas3"></canvas>normalized<canvas id="canvas4"></canvas>
     </div>
 
     <script>
@@ -125,16 +122,24 @@
             canvas.width = canvas.width;
             canvas2.width = canvas2.width;
             canvas3.width = canvas3.width;
+            canvas4.width = canvas4.width;
             document.getElementById('label').textContent = "";
         }
 
-        var model;
+        var model, model2;
         //tf.loadLayersModel('saved_model/converted_tfjs_model/model.json').then(m=>{model=m; recognizeBtn.disabled=false;});
-        tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m => { model = m; recognizeBtn.disabled = false; });
+        tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m => { 
+            model = m;
+            tf.loadLayersModel('saved_model/classifiers/model.json').then(m=>{
+                model2 = m;
+                recognizeBtn.disabled = false; 
+            });
+        });
 
         function rgbTensor2GrayTensor(rgbtensor, dispose = true) {
             const [r, g, b] = tf.split(rgbtensor, 3, 2); //split to list of 3 at axis 2
             const rt = tf.unstack(r, 2)[0];
+            //console.log(`rt.shape=${rt.shape},rgbtensor.shape=${rgbtensor.shape}`)
             r.dispose();
             g.dispose();
             b.dispose();
@@ -149,12 +154,18 @@
         }
 
         function getGrayTensorFromCanvas(canvas) {
-            rgb = tf.browser.fromPixels(canvas, 3);
-            return rgbTensor2GrayTensor(rgb, dispose = true)
+            //rgb = tf.browser.fromPixels(canvas, 3);
+            //return rgbTensor2GrayTensor(rgb, dispose = true)
+            return tf.tidy(()=>{
+                var r = tf.browser.fromPixels(canvas, 1);
+                var r2 = r.reshape([1, r.shape[0], r.shape[1], 1]);
+                return tf.image.resizeBilinear(r2, [28, 28])
+            });
         }
 
         function recognize() {
             const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            //console.log(`image.width=${image.width}, canvas.width=${canvas.width}, canvas.height=${canvas.height}`)
             const rect = computeBoundingRect(image);
             if (rect.xmax < 0) {
                 return -1;
@@ -165,8 +176,8 @@
             var w = longer ? data.height : data.width;
             canvas2.width = w;
             canvas2.height = w;
-            var left = longer ? w / 2 - data.width / 2 : 0;
-            var top = longer ? 0 : w / 2 - data.height / 2;
+            var left = longer ? Math.floor((w - data.width) / 2) : 0;
+            var top = longer ? 0 : Math.floor((w  - data.height) / 2);
             //console.log(canvas2.width, canvas2.height)
             ctx2.createImageData(w, w);
             ctx2.putImageData(data, left, top);
@@ -176,14 +187,16 @@
             canvas3.width = W;
             canvas3.height = W;
             ctx3.createImageData(W, W);
-            ctx3.putImageData(ctx2.getImageData(0, 0, w, w), W / 2 - w / 2, W / 2 - w / 2);
-
-            var gray = getGrayTensorFromCanvas(canvas3);
-            var pred = model.predict(gray);
-            v = pred.argMax(1).dataSync()[0];
-            gray.dispose();
-            pred.dispose();
-            return v;
+            ctx3.putImageData(ctx2.getImageData(0, 0, w, w), Math.floor((W - w) / 2), Math.floor((W - w) / 2));
+            return tf.tidy(()=>{
+                var gray = getGrayTensorFromCanvas(canvas3).div(tf.scalar(255.));
+                tf.browser.toPixels(gray.reshape([gray.shape[1],gray.shape[2]]), canvas4);
+                var pred = model.predict(gray);
+                var pred2 = model2.predict(gray);
+                v = pred.argMax(1).dataSync()[0];
+                v2 = pred2.argMax(1).dataSync()[0];
+                return [v,v2];
+            })
         }
         /*function getBoundingRect(){
             const image = ctx.getImageData(0,0,canvas.width,canvas.height);
