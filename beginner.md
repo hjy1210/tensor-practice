@@ -65,3 +65,10 @@ for i in range(10):
     plt.show()
     #plt.pause(0.1)
 ```
+
+## 製造開發階段用的 SSL 憑證
+If you don't care about your certificate being trusted (usually the case for development purposes) you can just create a self-signed certificate. To do this, we can use almost the same line, but we'll pass two extra parameters.
+
+`openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`
+
+注意，要使用webcam.js，必須是https網站。
