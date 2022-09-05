@@ -127,13 +127,16 @@
             document.getElementById('label').textContent = "";
         }
 
-        var model, model2;
+        var model, model2, model3;
         //tf.loadLayersModel('saved_model/converted_tfjs_model/model.json').then(m=>{model=m; recognizeBtn.disabled=false;});
         tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m => { 
             model = m;
             tf.loadLayersModel('saved_model/classifiers/model.json').then(m=>{
                 model2 = m;
-                recognizeBtn.disabled = false; 
+                tf.loadLayersModel('saved_model/hdrcnn/hdrcnn.json').then(m=>{
+                    model3 = m;
+                    recognizeBtn.disabled = false; 
+                });
             });
         });
 
@@ -210,9 +213,12 @@
                 tf.browser.toPixels(gray.reshape([gray.shape[1],gray.shape[2]]), canvas4);
                 var pred = model.predict(gray);
                 var pred2 = model2.predict(gray);
+                var pred3 = model3.predict(gray);
                 v = pred.argMax(1).dataSync()[0];
                 v2 = pred2.argMax(1).dataSync()[0];
-                return [v,v2];
+                v3 = pred3.argMax(1).dataSync()[0];
+                console.log(pred.dataSync()[v],pred2.dataSync()[v2],pred3.dataSync()[v3]);
+                return [v,v2,v3];
             })
         }
         /*function getBoundingRect(){

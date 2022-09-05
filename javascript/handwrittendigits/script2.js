@@ -47,6 +47,7 @@ async function run() {
   await showAccuracy(preds, labels);
   await showConfusion(preds, labels);
   labels.dispose();
+  await model.save('downloads://hdrcnn');
   console.log("done");
 }
 
@@ -141,7 +142,7 @@ async function train(model, data) {
     return model.fit(trainXs, trainYs, {
       batchSize: BATCH_SIZE,
       validationData: [testXs, testYs],
-      epochs: 10,
+      epochs: 20,
       shuffle: true,
       callbacks: fitCallbacks
     });
