@@ -129,7 +129,7 @@
 
         var model, model2, model3;
         //tf.loadLayersModel('saved_model/converted_tfjs_model/model.json').then(m=>{model=m; recognizeBtn.disabled=false;});
-        tf.loadLayersModel('saved_model/digit_cnn_model/model.json').then(m => { 
+        tf.loadLayersModel('digit_cnn_model_epoch30/model.json').then(m => { 
             model = m;
             tf.loadLayersModel('saved_model/classifiers/model.json').then(m=>{
                 model2 = m;
@@ -175,7 +175,7 @@
                 return -1;
             }
 
-            var nCountours = tf.tidy(()=>{
+            /*var nCountours = tf.tidy(()=>{
                 var r = tf.browser.fromPixels(canvas, 1);
                 var contours=FindContours.findContours(r.div(255.).dataSync(), r.shape[1], r.shape[0]);
                 var count=0;
@@ -190,7 +190,7 @@
             });
             if (nCountours != 1){
                 return -nCountours;
-            }
+            }*/
             var data = ctx.getImageData(rect.xmin, rect.ymin, rect.xmax - rect.xmin + 1, rect.ymax - rect.ymin + 1);
             var longer = data.height > data.width;
             var w = longer ? data.height : data.width;
