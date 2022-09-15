@@ -30,6 +30,7 @@
         <button id="recognizeBtn" disabled="true" onclick="document.getElementById('label').textContent=recognize()">
             辨識
         </button>
+        <button id="tmp" onclick="tmp()">tmp</button>
     </div>
     <div>
         bounded<canvas id="canvas2"></canvas> extent<canvas id="canvas3"></canvas>normalized<canvas id="canvas4"></canvas>
@@ -37,6 +38,9 @@
 
     <script>
         const canvas = document.getElementById("canvas");
+        const canvas2 = document.getElementById("canvas2");
+        const canvas3 = document.getElementById("canvas3");
+        const canvas4 = document.getElementById("canvas4");
         const clearBtn = document.getElementById("clearBtn");
         const recognizeBtn = document.getElementById("recognizeBtn");
         const ctx = canvas.getContext("2d");
@@ -250,6 +254,14 @@
             }
 
             return { xmin: xmin, ymin: ymin, xmax: xmax, ymax: ymax };
+        }
+        function tmp(){
+            let img = new Image();
+            img.onload=()=>{
+                canvas.getContext('2d').drawImage(img, 0, 0);
+            };
+            img.src="canvas.png";
+            
         }
 
     </script>
