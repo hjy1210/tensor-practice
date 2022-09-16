@@ -42,3 +42,8 @@ Coursera 上面的 `TensorFlow: Data and Deployment Specialization` 由四門課
   * 直接使用現成的模型toxicity
   * 直接使用現成的模型mobilenet
   * 從python訓練好的模型，轉換成可讓tensorflow.js使用的格式。
+* 第四週，
+  * Train a model in your web browser by using images captured via a `webcam`
+  * Apply transfer learning to train a model to recognize hand gestures of rock, paper, and scissors
+  * Apply transfer learning to train a model to recognize hand gestures of rock, paper, scissors, lizard, and spock
+
