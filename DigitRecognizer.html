@@ -222,7 +222,7 @@
                 var r2 = tf.image.resizeBilinear(r, [28, 28]);
                 tf.browser.toPixels(r2.reshape([28,28]).div(tf.scalar(255.)), canvas4);
                 
-                var gray = r2.reshape([1,28,28,1]);
+                var gray = r2.reshape([1,28,28,1]).div(tf.scalar(255.));
                 var pred = model.predict(gray);
                 var pred2 = model2.predict(gray);
                 var pred3 = model3.predict(gray);
