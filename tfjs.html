@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Import TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.19.0/dist/tf.min.js"></script>
+
+    <title>Digit Recognizer</title>
+    <style>
+        canvas,
+        img {
+            background-color: black;
+            margin: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <img id="img"
+        src="data:image/png;base64,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">
+    </img>
+    <p> Following canvas3 drawImage from above image.</p>
+    <div>
+        canvas3:<canvas id="canvas3" width="100" height="100"></canvas> 
+    </div>
+    <p> Following canvas4 display resizeBilinear image from canvas3. Strange phenomenon appeared.
+        <ul>
+            <li>In my desktop computer A, the image in canvas4 is <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAAXNSR0IArs4c6QAAAOVJREFUSEvtk7ERhCAQRT81GJEbGduAoRZgETZgZGJoA9ZgA5jagKEROaEteKMz3ghzCNxxRmzILP/BgyUANjxYJAB927ZWmuc5GGMSvygKjOPodKZb4LbZ/SdC9hi70gJVWBRFWNdVSl2WBUmSHGtpmmKeZyPVWuld0vVwWZZhmiZtuxfgnl6WJYZheIN0mr0BT1LTNGjbFo8BT71/BwohQCk9LlrXNbqu+/iOPyvlnCOOY+PbnQ1fA9WxsZ1FJ6AK6fseVVUZZ+/a4AR0StY0B6APi1JGUBqUOhsIn8ZZmWnD40pfVU5SARzP9YUAAAAASUVORK5CYII="/></li>
+            <li>In my desktop computer B, looks normal</li>
+            <li>In my androi phone, looks normal</li>
+        </ul>
+    </p>
+    <div>
+        canvas4:<canvas id="canvas4"></canvas>
+    </div>
+    <script>
+        let canvas3 = document.getElementById('canvas3');
+        let canvas4 = document.getElementById('canvas4');
+        let img = document.getElementById('img');
+        canvas3.width = img.naturalWidth;
+        canvas3.height = img.naturalHeight;
+        let ctx3 = canvas3.getContext('2d');
+        ctx3.drawImage(img, 0, 0);
+        var r = tf.browser.fromPixels(canvas3, 1);
+        var r2 = tf.image.resizeBilinear(r, [28, 28]);
+        tf.browser.toPixels(r2.reshape([28, 28]).div(tf.scalar(255.)), canvas4);
+
+    </script>
+
+</body>
+
+</html>

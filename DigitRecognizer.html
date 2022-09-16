@@ -27,7 +27,7 @@
     </div>
     <div>
         <button id="clearBtn">Clear</button>
-        <button id="recognizeBtn" disabled="true" onclick="document.getElementById('label').textContent=recognize()">
+        <button id="recognizeBtn" disabled="true" onclick="recognize()">
             辨識
         </button>
         <button id="tmp" onclick="tmp()">tmp</button>
@@ -46,6 +46,7 @@
         const ctx = canvas.getContext("2d");
         const ctx2 = canvas2.getContext("2d");
         const ctx3 = canvas3.getContext("2d");
+        const ctx4 = canvas4.getContext("2d");
 
         // Set up mouse events for drawing
         var drawing = false;
@@ -172,12 +173,13 @@
             });
         }
 
-        function recognize() {
+        function recognize0() {
             const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
             //console.log(`image.width=${image.width}, canvas.width=${canvas.width}, canvas.height=${canvas.height}`)
             const rect = computeBoundingRect(image);
             if (rect.xmax < 0) {
-                return -1;
+                document.getElementById('label').textContent = "-1";
+                return ;
             }
 
             /*var nCountours = tf.tidy(()=>{
@@ -214,6 +216,73 @@
             ctx3.createImageData(W, W);
             ctx3.putImageData(ctx2.getImageData(0, 0, w, w), Math.floor((W - w) / 2), Math.floor((W - w) / 2));
             return tf.tidy(()=>{
+                //var gray = getGrayTensorFromCanvas(canvas3).div(tf.scalar(255.));
+                //tf.browser.toPixels(gray.reshape([gray.shape[1],gray.shape[2]]), canvas4);
+                var r = tf.browser.fromPixels(canvas3, 1);
+                var r2 = tf.image.resizeBilinear(r, [28, 28]);
+                tf.browser.toPixels(r2.reshape([28,28]).div(tf.scalar(255.)), canvas4);
+                
+                var gray = r2.reshape([1,28,28,1]);
+                var pred = model.predict(gray);
+                var pred2 = model2.predict(gray);
+                var pred3 = model3.predict(gray);
+                v = pred.argMax(1).dataSync()[0];
+                v2 = pred2.argMax(1).dataSync()[0];
+                v3 = pred3.argMax(1).dataSync()[0];
+                console.log(pred.dataSync()[v],pred2.dataSync()[v2],pred3.dataSync()[v3]);
+                document.getElementById('label').textContent = `{${v},${v2},${v3}}`;
+            })
+        }
+
+        function recognize() {
+            const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            //console.log(`image.width=${image.width}, canvas.width=${canvas.width}, canvas.height=${canvas.height}`)
+            const rect = computeBoundingRect(image);
+            if (rect.xmax < 0) {
+                document.getElementById('label').textContent = "-1";
+                return ;
+            }
+
+            var data = ctx.getImageData(rect.xmin, rect.ymin, rect.xmax - rect.xmin + 1, rect.ymax - rect.ymin + 1);
+            var longer = data.height > data.width;
+            var w = longer ? data.height : data.width;
+            canvas2.width = w;
+            canvas2.height = w;
+            var left = longer ? Math.floor((w - data.width) / 2) : 0;
+            var top = longer ? 0 : Math.floor((w  - data.height) / 2);
+            //console.log(canvas2.width, canvas2.height)
+            ctx2.createImageData(w, w);
+            ctx2.putImageData(data, left, top);
+
+            var scale = 28 / 20;
+            var W = Math.floor(w * scale);
+            canvas3.width = W;
+            canvas3.height = W;
+            ctx3.createImageData(W, W);
+            ctx3.putImageData(ctx2.getImageData(0, 0, w, w), Math.floor((W - w) / 2), Math.floor((W - w) / 2));
+
+            canvas4.width = 28;
+            canvas4.height = 28;
+            let img=new Image();
+            img.onload=()=>{
+                ctx4.drawImage(img,0,0,28,28);
+                document.getElementById('label').textContent = "[-1,-1,-1]";
+                tf.tidy(()=>{
+                    var gray = tf.browser.fromPixels(canvas4, 1).reshape([1,28,28,1]);
+                    gray = gray.div(tf.scalar(255.));
+                    var pred = model.predict(gray);
+                    var pred2 = model2.predict(gray);
+                    var pred3 = model3.predict(gray);
+                    v = pred.argMax(1).dataSync()[0];
+                    v2 = pred2.argMax(1).dataSync()[0];
+                    v3 = pred3.argMax(1).dataSync()[0];
+                    console.log(pred.dataSync()[v],pred2.dataSync()[v2],pred3.dataSync()[v3]);
+                    document.getElementById('label').textContent = `[${v},${v2},${v3}]`;
+                });
+            }
+            img.src = canvas3.toDataURL("image/png");
+            
+            /*return tf.tidy(()=>{
                 var gray = getGrayTensorFromCanvas(canvas3).div(tf.scalar(255.));
                 tf.browser.toPixels(gray.reshape([gray.shape[1],gray.shape[2]]), canvas4);
                 var pred = model.predict(gray);
@@ -223,9 +292,10 @@
                 v2 = pred2.argMax(1).dataSync()[0];
                 v3 = pred3.argMax(1).dataSync()[0];
                 console.log(pred.dataSync()[v],pred2.dataSync()[v2],pred3.dataSync()[v3]);
-                return [v,v2,v3];
-            })
+                document.getElementById('label').textContent = `[${v},${v2},${v3}]`;
+            })*/
         }
+
         /*function getBoundingRect(){
             const image = ctx.getImageData(0,0,canvas.width,canvas.height);
             const rect = computeBoundingRect(image);
